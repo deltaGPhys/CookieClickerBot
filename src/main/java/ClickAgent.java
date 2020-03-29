@@ -1,17 +1,20 @@
+import Exceptions.BuildingFormatException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import sun.jvm.hotspot.debugger.Page;
 
+import javax.servlet.annotation.WebListener;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class ClickAgent {
 
     private WebDriver driver;
-    private int cookieCount;
+    private long cookieCount;
     private String bakeryName = "Cool Robot";
     private String saveKey;
     private String saveFile = "/Users/joshua.gates/" + bakeryName.replace(" ","") + "Bakery.txt";
@@ -29,15 +32,18 @@ public class ClickAgent {
 
         System.out.println("Game loaded: " + agent.loadGame());
 
-        agent.doClicks(1);
-
-        System.out.println("Game saved: " + agent.exportGame());
+        agent.updateBuildings();
+//        for (int i = 0; i < 3; i++) {
+//            agent.doClicks(1000);
+//
+//            System.out.println("Game saved: " + agent.exportGame());
+//        }
         System.out.println(agent.getCookieCount() + " cookies");
 
         agent.driver.close();
     }
 
-    public int doClicks(int clickNum) throws InterruptedException {
+    public long doClicks(int clickNum) throws InterruptedException {
 
         WebElement cookie = driver.findElement(PageElements.byBigCookie);
         for (int i = 0; i < clickNum; i++) {
@@ -49,11 +55,47 @@ public class ClickAgent {
         return getCookieCount();
     }
 
-    public int getCookieCount() {
+    public long getCookieCount() {
         WebElement cookieCountDisplay = driver.findElement(PageElements.byCookieCount);
-        this.cookieCount = Integer.parseInt(cookieCountDisplay.getText().split(":")[0].replaceAll("[^0-9]",""));
+        this.cookieCount = Long.parseLong(cookieCountDisplay.getText().split(":")[0].replaceAll("[^0-9]",""));
 
         return this.cookieCount;
+    }
+
+    public void updateBuildings() {
+        List<WebElement> elements = driver.findElements(By.className("product"));
+
+        for (WebElement element: elements) {
+            // id and name
+            int id = Integer.parseInt(element.getAttribute("id").replace("product",""));
+            String name = driver.findElement(By.id("productName"+id)).getText();
+            if (name.equals("")) {
+                continue;
+            }
+            Building building = Building.valueOf(name.toUpperCase());
+            if (building.getId() != id) {
+                throw new BuildingFormatException();
+            }
+            building.setElement(element);
+
+            // interpret class data
+            String[] classes = element.getAttribute("class").split(" ");
+            for (String clazz : classes) {
+                if (clazz.equals("unlocked")) {
+                    building.setUnlocked(true);
+                } else if (clazz.equals("enabled")) {
+                    building.setAffordable(true);
+                }
+            }
+
+            // set numerical data
+            if (building.isUnlocked()) {
+                building.setCost(NumberUtils.longParse(driver.findElement(By.id("productPrice" + id)).getText()));
+                building.setQty(NumberUtils.intParse(driver.findElement(By.id("productOwned" + id)).getText()));
+            }
+
+            System.out.println(building.toString());
+        }
     }
 
     public boolean loadGame() throws InterruptedException {
@@ -128,6 +170,10 @@ public class ClickAgent {
         driver.findElement(PageElements.byExportButton).click();
         Thread.sleep(1000);
         this.saveKey = driver.findElement(PageElements.byimportBox).getText();
+        driver.findElement(PageElements.byExportLoad).click();
+        Thread.sleep(1000);
+        driver.findElement(PageElements.byMenuClose).click();
+
         return storeSaveKey();
     }
 }

@@ -11,6 +11,7 @@ public class PageElements {
     public static final By byFileInputBox = By.id("FileLoadInput");
     public static final By bySaveButton = By.linkText("Save to file");
     public static final By byExportButton = By.linkText("Export save");
+    public static final By byExportLoad = byImportLoad;
     public static final By byMenuClose = By.cssSelector("#menu > div.close.menuClose");
 
     public static final By byStatsButton = By.id("statsButton");
