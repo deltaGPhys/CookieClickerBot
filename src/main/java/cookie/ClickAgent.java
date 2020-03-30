@@ -1,19 +1,23 @@
-import Exceptions.BuildingFormatException;
+package cookie;
+
+import cookie.buildings.Building;
+import cookie.buildings.CostComparator;
+import cookie.exceptions.BuildingFormatException;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import sun.jvm.hotspot.debugger.Page;
 
-import javax.servlet.annotation.WebListener;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLOutput;
+import java.util.Arrays;
 import java.util.List;
 
 public class ClickAgent {
 
     private WebDriver driver;
+    private long cookieCountSessionStart;
     private long cookieCount;
     private String bakeryName = "Cool Robot";
     private String saveKey;
@@ -31,14 +35,26 @@ public class ClickAgent {
         ClickAgent agent = new ClickAgent();
 
         System.out.println("Game loaded: " + agent.loadGame());
+        agent.cookieCountSessionStart = agent.getCookieCount();
+        System.out.println("Initial count: " + agent.cookieCountSessionStart);
 
-        agent.updateBuildings();
-//        for (int i = 0; i < 3; i++) {
-//            agent.doClicks(1000);
-//
-//            System.out.println("Game saved: " + agent.exportGame());
-//        }
-        System.out.println(agent.getCookieCount() + " cookies");
+        for (int i = 0; i < 20; i++) {
+            long time = System.currentTimeMillis();
+            agent.doClicks(10000);
+            System.out.println(1000/((System.currentTimeMillis() - time)/1000));
+
+            System.out.println("Game saved: " + agent.exportGame());
+            agent.updateBuildings();
+            if (i % 2 == 0) {
+                agent.purchaseCheapestUpgrade();
+            } else {
+                agent.simplePurchaseStrategy();
+            }
+
+        }
+        Thread.sleep(10000);
+
+        System.out.println(String.format("%d cookies: %d gained", agent.getCookieCount(), agent.cookieCount - agent.cookieCountSessionStart));
 
         agent.driver.close();
     }
@@ -57,9 +73,14 @@ public class ClickAgent {
 
     public long getCookieCount() {
         WebElement cookieCountDisplay = driver.findElement(PageElements.byCookieCount);
-        this.cookieCount = Long.parseLong(cookieCountDisplay.getText().split(":")[0].replaceAll("[^0-9]",""));
+        this.cookieCount = NumberUtils.longParse(cookieCountDisplay.getText().split(":")[0]);
 
         return this.cookieCount;
+    }
+
+    public void goldenCookieCheck() {
+        WebElement goldenCookie = driver.findElement(PageElements.byGoldenCookie);
+        //if (goldenCookie.getAttribute(""))
     }
 
     public void updateBuildings() {
@@ -94,7 +115,37 @@ public class ClickAgent {
                 building.setQty(NumberUtils.intParse(driver.findElement(By.id("productOwned" + id)).getText()));
             }
 
-            System.out.println(building.toString());
+//            Actions hover = new Actions(driver);
+//            hover.moveToElement(element);
+//            hover.build();
+//            hover.perform();
+//
+//            WebElement tooltip = driver.findElement(cookie.PageElements.byBuildingTooltip);
+//            String text = tooltip.getText();
+//            System.out.println(text);
+
+//            System.out.println(building.toString());
+        }
+    }
+
+    public void simplePurchaseStrategy() {
+        List<Building> buildings = Arrays.asList(Building.values());
+        buildings.sort(new CostComparator().reversed());
+        for (Building building: buildings) {
+
+            if (this.cookieCount > 2 * building.getCost() && building.getCost() != 0) {
+                building.getElement().click();
+                getCookieCount();
+                System.out.println(building.toString());
+            }
+        }
+    }
+
+    public void purchaseCheapestUpgrade() {
+        WebElement upgrade = driver.findElement(PageElements.byCheapestUpgrade);
+        if (upgrade.getAttribute("class").split(" ")[2].equals("enabled")) {
+            upgrade.click();
+            System.out.println("Upgrade purchased");
         }
     }
 

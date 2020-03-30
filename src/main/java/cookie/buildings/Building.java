@@ -1,5 +1,6 @@
+package cookie.buildings;
+
 import lombok.Getter;
-import lombok.Setter;
 import org.openqa.selenium.WebElement;
 
 @Getter
@@ -72,7 +73,7 @@ public enum Building {
 
     @Override
     public String toString() {
-        return "Building{" +
+        return "cookie.buildings.Building{" +
                 "name='" + name + '\'' +
                 ", id=" + id +
                 ", cost=" + cost +

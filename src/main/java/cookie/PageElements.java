@@ -1,3 +1,5 @@
+package cookie;
+
 import lombok.Getter;
 import org.openqa.selenium.By;
 
@@ -19,5 +21,10 @@ public class PageElements {
     public static final By byBakeryName = By.id("bakeryName");
     public static final By byBigCookie = By.id("bigCookie");
     public static final By byCookieCount = By.id("cookies");
+    public static final By byGoldenCookie = By.id("goldenCookie");
+
+    public static final By byBuildingTooltip = By.cssSelector("#tooltip > div > div.data");
+
+    public static final By byCheapestUpgrade = By.id("upgrade0");
 
 }

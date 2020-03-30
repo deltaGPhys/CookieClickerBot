@@ -1,3 +1,5 @@
+package cookie;
+
 import org.apache.commons.lang.SystemUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
