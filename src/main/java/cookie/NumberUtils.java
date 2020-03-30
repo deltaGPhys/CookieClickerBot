@@ -24,11 +24,11 @@ public class NumberUtils {
 
     public static String longPrint(long num) {
         if (Math.abs(num) > 1000000000000L) {
-            return num/1000000000000L + " trillion";
+            return num/1000000000000.0 + " trillion";
         } else if (Math.abs(num) > 1000000000) {
-            return num/1000000000 + " billion";
+            return num/1000000000.0 + " billion";
         } else if (Math.abs(num) > 1000000) {
-            return num/1000000 + " million";
+            return num/1000000.0 + " million";
         } else {
             return String.valueOf(num);
         }
@@ -53,9 +53,9 @@ public class NumberUtils {
 
     public static String intPrint(int num) {
         if (Math.abs(num) > 1000000000) {
-            return num/1000000000 + " billion";
+            return num/1000000000.0 + " billion";
         } else if (Math.abs(num) > 1000000) {
-            return num/1000000 + " million";
+            return num/1000000.0 + " million";
         } else {
             return String.valueOf(num);
         }

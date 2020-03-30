@@ -36,11 +36,11 @@ public class ClickAgent {
 
         System.out.println("Game loaded: " + agent.loadGame());
         agent.cookieCountSessionStart = agent.getCookieCount();
-        System.out.println("Initial count: " + agent.cookieCountSessionStart);
+        System.out.println("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 15; i++) {
             long time = System.currentTimeMillis();
-            agent.doClicks(2000);
+            agent.doClicks(5000);
             System.out.println(2000/((System.currentTimeMillis() - time)/1000));
 
             agent.updateBuildings();
@@ -54,7 +54,7 @@ public class ClickAgent {
         }
         Thread.sleep(10000);
 
-        System.out.println(String.format("%d cookies: %d gained", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.cookieCount - agent.cookieCountSessionStart)));
+        System.out.println(String.format("%s cookies: %s gained", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.cookieCount - agent.cookieCountSessionStart)));
 
         agent.driver.close();
     }
@@ -138,20 +138,24 @@ public class ClickAgent {
         getCookieCount();
         List<Building> buildings = Arrays.asList(Building.values());
         buildings.sort(new CostComparator().reversed());
-        for (Building building: buildings) {
+        long totalPurchase = 0;
 
-            if (this.cookieCount > 1000 * building.getCost() && building.getCost() != 0) {
+        for (Building building: buildings) {
+            if (this.cookieCount > 5000 * building.getCost() && building.getCost() != 0) {
                 for (int i = 0; i < 5; i++) {
                     building.getElement().click();
-                    getCookieCount();
+                    totalPurchase += building.getCost();
+                    this.cookieCount -= building.getCost();
                     System.out.println(building.toString());
                 }
             } else if (this.cookieCount > 2 * building.getCost() && building.getCost() != 0) {
                 building.getElement().click();
-                getCookieCount();
+                totalPurchase += building.getCost();
+                this.cookieCount -= building.getCost();
                 System.out.println(building.toString());
             }
         }
+        updateBuildings();
     }
 
     public void purchaseCheapestUpgrade() {
