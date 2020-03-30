@@ -16,8 +16,8 @@ public class NumberUtils {
             } else if (string.contains("trillion")) {
                 mult = 1000000000000L;
             }
-            string = string.replaceAll("[^0-9]","");
-            return mult * Long.parseLong(string);
+            string = string.replaceAll("[^0-9.]","");
+            return (long) (mult * Double.parseDouble(string));
         }
 
     }
@@ -34,8 +34,8 @@ public class NumberUtils {
             } else if (string.contains("billion")) {
                 mult = 1000000000;
             }
-            string = string.replaceAll("[^0-9]","");
-            return mult * Integer.parseInt(string);
+            string = string.replaceAll("[^0-9.]","");
+            return (int) (mult * Double.parseDouble(string));
         }
 
     }

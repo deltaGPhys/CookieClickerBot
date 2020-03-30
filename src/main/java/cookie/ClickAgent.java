@@ -40,16 +40,16 @@ public class ClickAgent {
 
         for (int i = 0; i < 6; i++) {
             long time = System.currentTimeMillis();
-            agent.doClicks(5000);
-            System.out.println(5000/((System.currentTimeMillis() - time)/1000));
+            agent.doClicks(2000);
+            System.out.println(2000/((System.currentTimeMillis() - time)/1000));
 
-            System.out.println("Game saved: " + agent.exportGame());
             agent.updateBuildings();
             if (i % 2 == 1) {
                 agent.purchaseCheapestUpgrade();
             } else {
                 agent.simplePurchaseStrategy();
             }
+            System.out.println("Game saved: " + agent.exportGame());
 
         }
         Thread.sleep(10000);
@@ -140,7 +140,7 @@ public class ClickAgent {
         buildings.sort(new CostComparator().reversed());
         for (Building building: buildings) {
 
-            if (this.cookieCount > 100 * building.getCost() && building.getCost() != 0) {
+            if (this.cookieCount > 1000 * building.getCost() && building.getCost() != 0) {
                 for (int i = 0; i < 5; i++) {
                     building.getElement().click();
                     System.out.println(building.toString());
@@ -155,7 +155,7 @@ public class ClickAgent {
 
     public void purchaseCheapestUpgrade() {
         WebElement upgrade = driver.findElement(PageElements.byCheapestUpgrade);
-        if (upgrade.getAttribute("class").split(" ")[2].equals("enabled")) {
+        if (upgrade.getAttribute("class").equals("crate upgrade enabled")) {
             upgrade.click();
             System.out.println("Upgrade purchased");
         }
