@@ -45,6 +45,15 @@ public enum Building {
         this.element = null;
     }
 
+    public static Building getById(int id) {
+        for (Building building : Building.values()) {
+            if (building.getId() == id) {
+                return building;
+            }
+        }
+        throw new IllegalArgumentException();
+    }
+
     public void setCost(long cost) {
         this.cost = cost;
         this.ratio = this.rate/this.cost;

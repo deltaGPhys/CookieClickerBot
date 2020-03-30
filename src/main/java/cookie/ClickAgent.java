@@ -38,14 +38,14 @@ public class ClickAgent {
         agent.cookieCountSessionStart = agent.getCookieCount();
         System.out.println("Initial count: " + agent.cookieCountSessionStart);
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 6; i++) {
             long time = System.currentTimeMillis();
-            agent.doClicks(10000);
-            System.out.println(1000/((System.currentTimeMillis() - time)/1000));
+            agent.doClicks(5000);
+            System.out.println(5000/((System.currentTimeMillis() - time)/1000));
 
             System.out.println("Game saved: " + agent.exportGame());
             agent.updateBuildings();
-            if (i % 2 == 0) {
+            if (i % 2 == 1) {
                 agent.purchaseCheapestUpgrade();
             } else {
                 agent.simplePurchaseStrategy();
@@ -85,6 +85,11 @@ public class ClickAgent {
 
     public void updateBuildings() {
         List<WebElement> elements = driver.findElements(By.className("product"));
+        boolean businessSeason = false;
+        if (elements.size() > 0) {
+            businessSeason = driver.findElement(By.id("productName0")).getText().equals("Rolling pin");
+        }
+
 
         for (WebElement element: elements) {
             // id and name
@@ -93,8 +98,9 @@ public class ClickAgent {
             if (name.equals("")) {
                 continue;
             }
-            Building building = Building.valueOf(name.toUpperCase());
-            if (building.getId() != id) {
+            Building building = Building.getById(id);
+
+            if (!businessSeason && !name.equals(Building.valueOf(name.toUpperCase()))) {
                 throw new BuildingFormatException();
             }
             building.setElement(element);
@@ -129,11 +135,17 @@ public class ClickAgent {
     }
 
     public void simplePurchaseStrategy() {
+        getCookieCount();
         List<Building> buildings = Arrays.asList(Building.values());
         buildings.sort(new CostComparator().reversed());
         for (Building building: buildings) {
 
-            if (this.cookieCount > 2 * building.getCost() && building.getCost() != 0) {
+            if (this.cookieCount > 100 * building.getCost() && building.getCost() != 0) {
+                for (int i = 0; i < 5; i++) {
+                    building.getElement().click();
+                    System.out.println(building.toString());
+                }
+            } else if (this.cookieCount > 2 * building.getCost() && building.getCost() != 0) {
                 building.getElement().click();
                 getCookieCount();
                 System.out.println(building.toString());
