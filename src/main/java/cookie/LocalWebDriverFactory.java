@@ -30,6 +30,7 @@ public class LocalWebDriverFactory {
         //options.setBinary(executablePath);
         options.addArguments("--disable-gpu");
         options.addArguments("--start-maximized");
+        options.addArguments("--mute-audio");
         //options.addArguments("--verbose");
         //options.addArguments("--headless");
         //options.addArguments("--window-size=1366,768");

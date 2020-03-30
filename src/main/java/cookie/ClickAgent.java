@@ -54,7 +54,7 @@ public class ClickAgent {
         }
         Thread.sleep(10000);
 
-        System.out.println(String.format("%d cookies: %d gained", agent.getCookieCount(), agent.cookieCount - agent.cookieCountSessionStart));
+        System.out.println(String.format("%d cookies: %d gained", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.cookieCount - agent.cookieCountSessionStart)));
 
         agent.driver.close();
     }
@@ -143,6 +143,7 @@ public class ClickAgent {
             if (this.cookieCount > 1000 * building.getCost() && building.getCost() != 0) {
                 for (int i = 0; i < 5; i++) {
                     building.getElement().click();
+                    getCookieCount();
                     System.out.println(building.toString());
                 }
             } else if (this.cookieCount > 2 * building.getCost() && building.getCost() != 0) {

@@ -17,6 +17,7 @@ public class PageElements {
     public static final By byMenuClose = By.cssSelector("#menu > div.close.menuClose");
 
     public static final By byStatsButton = By.id("statsButton");
+    public static final By byVolumeSlider = By.id("volumeSlider");
 
     public static final By byBakeryName = By.id("bakeryName");
     public static final By byBigCookie = By.id("bigCookie");

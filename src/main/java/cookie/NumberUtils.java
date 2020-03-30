@@ -22,6 +22,18 @@ public class NumberUtils {
 
     }
 
+    public static String longPrint(long num) {
+        if (Math.abs(num) > 1000000000000L) {
+            return num/1000000000000L + " trillion";
+        } else if (Math.abs(num) > 1000000000) {
+            return num/1000000000 + " billion";
+        } else if (Math.abs(num) > 1000000) {
+            return num/1000000 + " million";
+        } else {
+            return String.valueOf(num);
+        }
+    }
+
     public static int intParse(String string) {
         if (string.equals("")) {
             return 0;
@@ -37,6 +49,15 @@ public class NumberUtils {
             string = string.replaceAll("[^0-9.]","");
             return (int) (mult * Double.parseDouble(string));
         }
+    }
 
+    public static String intPrint(int num) {
+        if (Math.abs(num) > 1000000000) {
+            return num/1000000000 + " billion";
+        } else if (Math.abs(num) > 1000000) {
+            return num/1000000 + " million";
+        } else {
+            return String.valueOf(num);
+        }
     }
 }
