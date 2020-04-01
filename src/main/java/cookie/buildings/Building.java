@@ -1,5 +1,6 @@
 package cookie.buildings;
 
+import cookie.NumberUtils;
 import lombok.Getter;
 import org.openqa.selenium.WebElement;
 
@@ -85,7 +86,7 @@ public enum Building {
         return "cookie.buildings.Building{" +
                 "name='" + name + '\'' +
                 ", id=" + id +
-                ", cost=" + cost +
+                ", cost=" + NumberUtils.longPrint(cost) +
                 ", rate=" + rate +
                 ", ratio=" + ratio +
                 ", qty=" + qty +

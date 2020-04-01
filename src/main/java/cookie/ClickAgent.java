@@ -3,6 +3,7 @@ package cookie;
 import cookie.buildings.Building;
 import cookie.buildings.CostComparator;
 import cookie.exceptions.BuildingFormatException;
+import cookie.exceptions.IncompleteMetricsException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -10,7 +11,6 @@ import org.openqa.selenium.WebElement;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,6 +19,8 @@ public class ClickAgent {
     private WebDriver driver;
     private long cookieCountSessionStart;
     private long cookieCount;
+    private long passiveRate;
+    private double clickRate;
     private String bakeryName = "Cool Robot";
     private String saveKey;
     private String saveFile = "/Users/joshua.gates/" + bakeryName.replace(" ","") + "Bakery.txt";
@@ -31,17 +33,22 @@ public class ClickAgent {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception, IncompleteMetricsException {
         ClickAgent agent = new ClickAgent();
 
-        System.out.println("Game loaded: " + agent.loadGame());
+        SlackReporter.sendSimpleMessage("Game loaded: " + agent.loadGame());
         agent.cookieCountSessionStart = agent.getCookieCount();
-        System.out.println("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
+        SlackReporter.sendSimpleMessage("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
 
-        for (int i = 0; i < 15; i++) {
-            long time = System.currentTimeMillis();
-            agent.doClicks(5000);
-            System.out.println(2000/((System.currentTimeMillis() - time)/1000));
+        int clickNum = 10000;
+        int processNum = 10;
+
+        for (int i = 0; i < processNum; i++) {
+            SlackReporter.sendSimpleMessage(String.format("Beginning process %d of %d", i+1, processNum));
+            SlackReporter.sendSimpleMessage(String.format("Beginning of process: %s cookies\nPassive rate: %s cookies per second", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.passiveRate)));
+
+            agent.doClicks(clickNum);
+            SlackReporter.sendSimpleMessage(String.format("End of process: %s cookies\nPassive rate: %s cookies per second", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.passiveRate)));
 
             agent.updateBuildings();
             if (i % 2 == 1) {
@@ -49,20 +56,33 @@ public class ClickAgent {
             } else {
                 agent.simplePurchaseStrategy();
             }
-            System.out.println("Game saved: " + agent.exportGame());
+            SlackReporter.sendSimpleMessage("Game saved: " + agent.exportGame());
 
         }
         Thread.sleep(10000);
 
-        System.out.println(String.format("%s cookies: %s gained", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.cookieCount - agent.cookieCountSessionStart)));
+        SlackReporter.sendSimpleMessage(String.format("%s cookies: %s gained", NumberUtils.longPrint(agent.getCookieCount()), NumberUtils.longPrint(agent.cookieCount - agent.cookieCountSessionStart)));
 
         agent.driver.close();
     }
 
-    public long doClicks(int clickNum) throws InterruptedException {
+    public long doClicks(int clickNum) throws Exception, IncompleteMetricsException {
 
         WebElement cookie = driver.findElement(PageElements.byBigCookie);
+        long batchStartTime = System.currentTimeMillis();
+        long batchCookieStart = this.cookieCount;
+        int interval = 1000;
+
         for (int i = 0; i < clickNum; i++) {
+            if (i % interval == 0 && i > 0) {
+                // calculate metrics for this entire batch up to now, not just this interval
+                ClickMetrics metrics = new ClickMetrics(batchStartTime, batchCookieStart);
+                getCookieCount();
+                metrics.endInterval(System.currentTimeMillis(), this.cookieCount, this.passiveRate, interval * i/interval);
+                SlackReporter.sendSimpleMessage(String.valueOf(i));
+                metrics.reportMetrics();
+                metrics.reportPrediction(clickNum-interval * i/interval);
+            }
             cookie.click();
         }
 
@@ -74,6 +94,7 @@ public class ClickAgent {
     public long getCookieCount() {
         WebElement cookieCountDisplay = driver.findElement(PageElements.byCookieCount);
         this.cookieCount = NumberUtils.longParse(cookieCountDisplay.getText().split(":")[0]);
+        this.passiveRate = NumberUtils.longParse(cookieCountDisplay.getText().split(":")[1]);
 
         return this.cookieCount;
     }
@@ -134,7 +155,7 @@ public class ClickAgent {
         }
     }
 
-    public void simplePurchaseStrategy() {
+    public void simplePurchaseStrategy() throws Exception {
         getCookieCount();
         List<Building> buildings = Arrays.asList(Building.values());
         buildings.sort(new CostComparator().reversed());
@@ -146,23 +167,23 @@ public class ClickAgent {
                     building.getElement().click();
                     totalPurchase += building.getCost();
                     this.cookieCount -= building.getCost();
-                    System.out.println(building.toString());
+                    SlackReporter.sendSimpleMessage(building.toString());
                 }
             } else if (this.cookieCount > 2 * building.getCost() && building.getCost() != 0) {
                 building.getElement().click();
                 totalPurchase += building.getCost();
                 this.cookieCount -= building.getCost();
-                System.out.println(building.toString());
+                SlackReporter.sendSimpleMessage(building.toString());
             }
         }
         updateBuildings();
     }
 
-    public void purchaseCheapestUpgrade() {
+    public void purchaseCheapestUpgrade() throws Exception {
         WebElement upgrade = driver.findElement(PageElements.byCheapestUpgrade);
         if (upgrade.getAttribute("class").equals("crate upgrade enabled")) {
             upgrade.click();
-            System.out.println("Upgrade purchased");
+            SlackReporter.sendSimpleMessage("Upgrade purchased");
         }
     }
 
@@ -183,7 +204,6 @@ public class ClickAgent {
             e.printStackTrace();
             return false;
         }
-        System.out.println(this.saveKey);
         return true;
     }
 
