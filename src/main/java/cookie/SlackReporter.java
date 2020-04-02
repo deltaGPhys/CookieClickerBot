@@ -7,7 +7,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -15,17 +14,17 @@ import java.net.URL;
 public class SlackReporter {
 
     private final static String USER_AGENT = "Mozilla/5.0";
-    private final static String SLACK_URL = "https://hooks.slack.com/services/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";
+    private final static String SLACK_URL = System.getenv("SLACK_URL");
 
     public static void sendSimpleMessage(String text) throws Exception {
         JSONObject data = new JSONObject();
         System.out.println(text);
         data.put("text", text);
-        sendOld(data);
+        send(data);
     }
 
     // HTTP Post request
-    public static void sendOld(JSONObject data) throws Exception {
+    public static void send(JSONObject data) throws Exception {
         URL obj = new URL(SLACK_URL);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
@@ -53,27 +52,5 @@ public class SlackReporter {
             response.append(output);
         }
         in.close();
-    }
-
-    public static void send(JSONObject data) {
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost(SLACK_URL);
-
-        try {
-            //ObjectMapper objectMapper = new ObjectMapper();
-            //String json = objectMapper.writeValueAsString(message);
-            String json = data.toString();
-
-            StringEntity entity = new StringEntity(json);
-            httpPost.setEntity(entity);
-            httpPost.setHeader("Accept", "application/json");
-            httpPost.setHeader("Content-type", "application/json");
-
-            client.execute(httpPost);
-            client.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 }

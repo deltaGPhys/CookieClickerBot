@@ -21,9 +21,9 @@ public class ClickAgent {
     private long cookieCount;
     private long passiveRate;
     private double clickRate;
-    private String bakeryName = "Cool Robot";
+    private String bakeryName = System.getenv("BAKERY_NAME");
     private String saveKey;
-    private String saveFile = "/Users/joshua.gates/" + bakeryName.replace(" ","") + "Bakery.txt";
+    private String saveFile = System.getenv("SAVE_PATH") + bakeryName.replace(" ","") + "Bakery.txt";
 
     public ClickAgent() throws InterruptedException {
         if (this.driver == null) {
@@ -40,8 +40,8 @@ public class ClickAgent {
         agent.cookieCountSessionStart = agent.getCookieCount();
         SlackReporter.sendSimpleMessage("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
 
-        int clickNum = 10000;
-        int processNum = 10;
+        int clickNum = 8000;
+        int processNum = 1;
 
         for (int i = 0; i < processNum; i++) {
             SlackReporter.sendSimpleMessage(String.format("Beginning process %d of %d", i+1, processNum));
@@ -74,11 +74,15 @@ public class ClickAgent {
         int interval = 1000;
 
         for (int i = 0; i < clickNum; i++) {
+
             if (i % interval == 0 && i > 0) {
                 // calculate metrics for this entire batch up to now, not just this interval
-                ClickMetrics metrics = new ClickMetrics(batchStartTime, batchCookieStart);
+
+//              // ClickMetrics metrics = new ClickMetrics(batchStartTime, batchCookieStart);
+                ClickMetrics metrics = new ClickMetrics(batchStartTime, this.cookieCount);
                 getCookieCount();
-                metrics.endInterval(System.currentTimeMillis(), this.cookieCount, this.passiveRate, interval * i/interval);
+                metrics.endInterval(System.currentTimeMillis(), this.cookieCount, this.passiveRate, interval);
+                batchStartTime = System.currentTimeMillis();
                 SlackReporter.sendSimpleMessage(String.valueOf(i));
                 metrics.reportMetrics();
                 metrics.reportPrediction(clickNum-interval * i/interval);

@@ -46,7 +46,7 @@ public class ClickMetrics {
         if (this.timeDelta == 0L) {
             throw new IncompleteMetricsException();
         }
-        SlackReporter.sendSimpleMessage(String.format("Current click rate: %.2f -- Passive earn rate: %s per s -- Click rate: %.2f per s -- Estimated per-click earn rate: %s -- Estimated total click earn rate: %s per s", this.clickRate, NumberUtils.longPrint(this.passiveRate), this.clickRate, NumberUtils.longPrint(this.perClickEarnRate), NumberUtils.longPrint(this.totalClickEarnRate)));
+        SlackReporter.sendSimpleMessage(String.format("Passive earn rate: %s per s -- Click rate: %.2f per s -- Estimated per-click earn rate: %s -- Estimated total click earn rate: %s per s", NumberUtils.longPrint(this.passiveRate), this.clickRate, NumberUtils.longPrint(this.perClickEarnRate), NumberUtils.longPrint(this.totalClickEarnRate)));
     }
 
     public void reportPrediction(long remainingClicks) throws Exception {
