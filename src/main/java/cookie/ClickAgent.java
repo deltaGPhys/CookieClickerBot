@@ -1,13 +1,25 @@
 package cookie;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import cookie.buildings.Building;
-import cookie.buildings.CostComparator;
+import cookie.buildings.IdComparator;
 import cookie.exceptions.BuildingFormatException;
 import cookie.exceptions.IncompleteMetricsException;
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,10 +32,14 @@ public class ClickAgent {
     private long cookieCountSessionStart;
     private long cookieCount;
     private long passiveRate;
-    private double clickRate;
     private String bakeryName = System.getenv("BAKERY_NAME");
     private String saveKey;
     private String saveFile = System.getenv("SAVE_PATH") + bakeryName.replace(" ","") + "Bakery.txt";
+    private String S3_BUCKET = System.getenv("S3_BUCKET");
+    private String AWS_ACCESS_KEY = System.getenv("AWS_ACCESS_KEY");
+    private String AWS_SECRET_KEY = System.getenv("AWS_SECRET_KEY");
+    private String S3_FILE_KEY = bakeryName.replace(" ","") + "Bakery.txt";
+
 
     public ClickAgent() throws InterruptedException {
         if (this.driver == null) {
@@ -36,11 +52,13 @@ public class ClickAgent {
     public static void main(String[] args) throws Exception, IncompleteMetricsException {
         ClickAgent agent = new ClickAgent();
 
+        SlackReporter.sendSimpleMessage(String.format("File %s retrieved from S3 bucket %s: %s", agent.S3_FILE_KEY, agent.S3_BUCKET, agent.loadFromS3()));
         SlackReporter.sendSimpleMessage("Game loaded: " + agent.loadGame());
+
         agent.cookieCountSessionStart = agent.getCookieCount();
         SlackReporter.sendSimpleMessage("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
 
-        int clickNum = 8000;
+        int clickNum = 10;
         int processNum = 1;
 
         for (int i = 0; i < processNum; i++) {
@@ -57,7 +75,7 @@ public class ClickAgent {
                 agent.simplePurchaseStrategy();
             }
             SlackReporter.sendSimpleMessage("Game saved: " + agent.exportGame());
-
+            SlackReporter.sendSimpleMessage(String.format("File %s saved to S3 bucket %s: %s", agent.S3_FILE_KEY, agent.S3_BUCKET, agent.saveToS3()));
         }
         Thread.sleep(10000);
 
@@ -125,7 +143,8 @@ public class ClickAgent {
             }
             Building building = Building.getById(id);
 
-            if (!businessSeason && !name.equals(Building.valueOf(name.toUpperCase()))) {
+            if (!businessSeason && Building.getByName(name) == null) {
+                System.out.println(name);
                 throw new BuildingFormatException();
             }
             building.setElement(element);
@@ -162,7 +181,7 @@ public class ClickAgent {
     public void simplePurchaseStrategy() throws Exception {
         getCookieCount();
         List<Building> buildings = Arrays.asList(Building.values());
-        buildings.sort(new CostComparator().reversed());
+        buildings.sort(new IdComparator().reversed());
         long totalPurchase = 0;
 
         for (Building building: buildings) {
@@ -267,5 +286,48 @@ public class ClickAgent {
         driver.findElement(PageElements.byMenuClose).click();
 
         return storeSaveKey();
+    }
+
+    public boolean loadFromS3() throws Exception {
+        SlackReporter.sendSimpleMessage(String.format("Downloading %s from S3 bucket %s...\n", S3_FILE_KEY, S3_BUCKET));
+        AWSCredentials credentials = new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+        final AmazonS3 s3 = AmazonS3ClientBuilder
+                .standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion(Regions.US_EAST_1)
+                .build();
+        try {
+            S3Object o = s3.getObject(S3_BUCKET, S3_FILE_KEY);
+            S3ObjectInputStream s3is = o.getObjectContent();
+            FileUtils.copyInputStreamToFile(s3is, new File(saveFile));
+            s3is.close();
+        } catch (AmazonServiceException e) {
+            System.err.println(e.getErrorMessage());
+            System.exit(1);
+        } catch (FileNotFoundException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        return true;
+    }
+
+    public boolean saveToS3() throws Exception {
+        SlackReporter.sendSimpleMessage(String.format("Saving %s to S3 bucket %s...\n", S3_FILE_KEY, S3_BUCKET));
+        AWSCredentials credentials = new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY);
+        final AmazonS3 s3 = AmazonS3ClientBuilder
+                .standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion(Regions.US_EAST_1)
+                .build();
+        try {
+            s3.putObject(S3_BUCKET, S3_FILE_KEY, new File(saveFile));
+        } catch (AmazonServiceException e) {
+            System.err.println(e.getErrorMessage());
+            System.exit(1);
+        }
+        return true;
     }
 }

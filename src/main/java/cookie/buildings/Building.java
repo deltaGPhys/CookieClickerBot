@@ -13,16 +13,16 @@ public enum Building {
     FACTORY("Factory", 4),
     BANK("Bank", 5),
     TEMPLE("Temple", 6),
-    WIZARD_TOWER("Wizard Tower", 7),
+    WIZARD_TOWER("Wizard tower", 7),
     SHIPMENT("Shipment", 8),
-    ALCHEMY_LAB("Alchemy Lab", 9),
+    ALCHEMY_LAB("Alchemy lab", 9),
     PORTAL("Portal", 10),
-    TIME_MACHINE("Time Machine", 11),
-    ANTIMATTER_CONDENSER("Antimatter Condenser", 12),
+    TIME_MACHINE("Time machine", 11),
+    ANTIMATTER_CONDENSER("Antimatter condenser", 12),
     PRISM("Prism", 13),
     CHANCEMAKER("Chancemaker", 14),
-    FRACTAL_ENGINE("Fractal_Engine", 15),
-    JAVASCRIPT_CONSOLE("Javascript Console", 16);
+    FRACTAL_ENGINE("Fractal engine", 15),
+    JAVASCRIPT_CONSOLE("Javascript console", 16);
 
     private String name;
     private int id;
@@ -52,7 +52,16 @@ public enum Building {
                 return building;
             }
         }
-        throw new IllegalArgumentException();
+        return null;
+    }
+
+    public static Building getByName(String searchName) {
+        for (Building building : Building.values()) {
+            if (building.getName().equalsIgnoreCase(searchName)) {
+                return building;
+            }
+        }
+        return null;
     }
 
     public void setCost(long cost) {
