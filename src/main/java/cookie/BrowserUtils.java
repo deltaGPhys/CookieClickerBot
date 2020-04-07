@@ -11,7 +11,7 @@ public class BrowserUtils {
 
         LocalWebDriverFactory factory = new LocalWebDriverFactory();
         driver = factory.createDesktopWebDriver();
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
 
         //setup(driver);
         return driver;

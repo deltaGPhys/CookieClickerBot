@@ -17,6 +17,8 @@ public class NumberUtils {
                 mult = 1000000000000L;
             } else if (string.contains("quadrillion")) {
                 mult = 1000000000000000L;
+            } else if (string.contains("quintillion")) {
+                mult = 1000000000000000000L;
             }
             string = string.replaceAll("[^0-9.]","");
             return (long) (mult * Double.parseDouble(string));
@@ -25,14 +27,16 @@ public class NumberUtils {
     }
 
     public static String longPrint(long num) {
-        if (Math.abs(num) > 1000000000000000L) {
-            return num/1000000000000000.0 + " quadrillion";
+        if (Math.abs(num) > 1000000000000000000L) {
+            return String.format("%.3f quintillion", num/1000000000000000000.0);
+        } else if (Math.abs(num) > 1000000000000000L) {
+            return String.format("%.3f quadrillion", num/1000000000000000.0);
         } else if (Math.abs(num) > 1000000000000L) {
-            return num / 1000000000000.0 + " trillion";
+            return String.format("%.3f trillion", num/1000000000000.0);
         } else if (Math.abs(num) > 1000000000) {
-            return num/1000000000.0 + " billion";
+            return String.format("%.3f billion", num/1000000000.0);
         } else if (Math.abs(num) > 1000000) {
-            return num/1000000.0 + " million";
+            return String.format("%.3f million", num/1000000.0);
         } else {
             return String.valueOf(num);
         }

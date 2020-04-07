@@ -17,6 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import sun.jvm.hotspot.debugger.Page;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ClickAgent {
 
@@ -52,14 +54,14 @@ public class ClickAgent {
     public static void main(String[] args) throws Exception, IncompleteMetricsException {
         ClickAgent agent = new ClickAgent();
 
-        SlackReporter.sendSimpleMessage(String.format("File %s retrieved from S3 bucket %s: %s", agent.S3_FILE_KEY, agent.S3_BUCKET, agent.loadFromS3()));
+        //SlackReporter.sendSimpleMessage(String.format("File %s retrieved from S3 bucket %s: %s", agent.S3_FILE_KEY, agent.S3_BUCKET, agent.loadFromS3()));
         SlackReporter.sendSimpleMessage("Game loaded: " + agent.loadGame());
 
         agent.cookieCountSessionStart = agent.getCookieCount();
         SlackReporter.sendSimpleMessage("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
 
-        int clickNum = 10;
-        int processNum = 1;
+        int clickNum = 50000;
+        int processNum = 10;
 
         for (int i = 0; i < processNum; i++) {
             SlackReporter.sendSimpleMessage(String.format("Beginning process %d of %d", i+1, processNum));
@@ -90,8 +92,13 @@ public class ClickAgent {
         long batchStartTime = System.currentTimeMillis();
         long batchCookieStart = this.cookieCount;
         int interval = 1000;
+        int goldenInterval = 250;
 
         for (int i = 0; i < clickNum; i++) {
+
+            if (i % goldenInterval == 0 && i > 0) {
+                this.goldenCookieCheck();
+            }
 
             if (i % interval == 0 && i > 0) {
                 // calculate metrics for this entire batch up to now, not just this interval
@@ -104,6 +111,8 @@ public class ClickAgent {
                 SlackReporter.sendSimpleMessage(String.valueOf(i));
                 metrics.reportMetrics();
                 metrics.reportPrediction(clickNum-interval * i/interval);
+
+//                closeNotifications();
             }
             cookie.click();
         }
@@ -111,6 +120,15 @@ public class ClickAgent {
         Thread.sleep(2000);
 
         return getCookieCount();
+    }
+
+    public void closeNotifications() {
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.MILLISECONDS);
+        List<WebElement> closers = driver.findElements(PageElements.byNotificationCloser);
+        if (closers.size() > 0) {
+            closers.get(0).click();
+        }
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
     }
 
     public long getCookieCount() {
@@ -121,9 +139,14 @@ public class ClickAgent {
         return this.cookieCount;
     }
 
-    public void goldenCookieCheck() {
-        WebElement goldenCookie = driver.findElement(PageElements.byGoldenCookie);
-        //if (goldenCookie.getAttribute(""))
+    public void goldenCookieCheck() throws Exception {
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.MILLISECONDS);
+        List<WebElement> shimmers = driver.findElements(PageElements.byGoldenCookieShimmer);
+        if (shimmers.size() > 0) {
+            driver.findElement(PageElements.byGoldenCookieShimmer).click();
+            SlackReporter.sendSimpleMessage("Golden cookie clicked");
+        }
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
     }
 
     public void updateBuildings() {

@@ -15,6 +15,7 @@ public class PageElements {
     public static final By byExportButton = By.linkText("Export save");
     public static final By byExportLoad = byImportLoad;
     public static final By byMenuClose = By.cssSelector("#menu > div.close.menuClose");
+    public static final By byNotificationCloser = By. cssSelector("#notes > div.framed.close.sidenote");
 
     public static final By byStatsButton = By.id("statsButton");
     public static final By byVolumeSlider = By.id("volumeSlider");
@@ -23,6 +24,8 @@ public class PageElements {
     public static final By byBigCookie = By.id("bigCookie");
     public static final By byCookieCount = By.id("cookies");
     public static final By byGoldenCookie = By.id("goldenCookie");
+    public static final By byGoldenCookieShimmer = By.className("shimmer");
+    public static final By byGoldenCookieShimmerID = By.id("shimmers");
 
     public static final By byBuildingTooltip = By.cssSelector("#tooltip > div > div.data");
 
