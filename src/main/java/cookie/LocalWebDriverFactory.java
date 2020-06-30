@@ -14,7 +14,7 @@ public class LocalWebDriverFactory {
 
     public static String getBrowserVersion() {
         //TODO: detect chrome version automagically and use the appropriate chromedriver; that driver needs to be added to resources, as well.
-        return "81";
+        return "84";
     }
 
     public LocalWebDriverFactory() {
