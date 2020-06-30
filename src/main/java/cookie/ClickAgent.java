@@ -60,8 +60,8 @@ public class ClickAgent {
         agent.cookieCountSessionStart = agent.getCookieCount();
         SlackReporter.sendSimpleMessage("Initial count: " + NumberUtils.longPrint(agent.cookieCountSessionStart));
 
-        int clickNum = 50000;
-        int processNum = 10;
+        int clickNum = 2000;
+        int processNum = 1;
 
         for (int i = 0; i < processNum; i++) {
             SlackReporter.sendSimpleMessage(String.format("Beginning process %d of %d", i+1, processNum));
@@ -208,7 +208,10 @@ public class ClickAgent {
         long totalPurchase = 0;
 
         for (Building building: buildings) {
-            if (this.cookieCount > 5000 * building.getCost() && building.getCost() != 0) {
+            if (building.equals(Building.GRANDMA)) { //grandmapocalypse
+                continue;
+            }
+            if (this.cookieCount > 10000000 * building.getCost() && building.getCost() != 0) {
                 for (int i = 0; i < 5; i++) {
                     building.getElement().click();
                     totalPurchase += building.getCost();
